@@ -31,6 +31,11 @@ app.use('/users', userRoutes);
 // мидлвэра, которая по эндопоинту /users будет использовать роутер cardRoutes
 app.use('/cards', cardRoutes);
 
+// мидлвэра, которая отдает 404 ошибку при запросе несуществующего роута
+app.use((req, res) => {
+  res.status(404).send({ message: 'Страница на которую вы попапли, не существует' });
+});
+
 async function start() {
   await mongoose.connect('mongodb://localhost:27017/mestodb', {
     useNewUrlParser: true,

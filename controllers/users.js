@@ -1,6 +1,7 @@
 // импортируем модель
 const User = require('../models/user');
 
+const opts = { runValidators: true, new: true };
 module.exports = {
   findUsers(req, res) {
     // ищем всех пользователей
@@ -10,14 +11,11 @@ module.exports = {
   },
 
   findUserOne(req, res) {
-    // eslint-disable-next-line no-console
-    console.log(req.params.id);
     // ищем пользователя по id
-    User.findById(req.params.id)
+    User.findById(req.params.id).orFail()
       .then((users) => res.send({ users }))
       .catch((err) => {
-        // eslint-disable-next-line no-bitwise
-        if (err.message && ~err.message.indexOf('Cast to ObjectId failed')) {
+        if (err.name === 'CastError') {
           res.status(404).send({
             message: 'Пользователь по указанному _id не найден',
           });
@@ -42,8 +40,7 @@ module.exports = {
       .then((user) => res.send({ user }))
       // если ответ не успешный, отправим на сервер ошибку
       .catch((err) => {
-        // eslint-disable-next-line no-bitwise
-        if (err.message && ~err.message.indexOf('validation failed')) {
+        if (err.name === 'ValidationError') {
           res.status(400).send({
             message: 'Переданы некорректные данные в методы создания пользователя',
           });
@@ -57,22 +54,19 @@ module.exports = {
       name,
       about,
     } = req.body;
-
     User.findByIdAndUpdate(req.user._id, {
       name,
       about,
-    })
+    }, opts).orFail()
       .then((user) => res.send({ user }))
       // если ответ не успешный, отправим на сервер ошибку
       .catch((err) => {
-        // eslint-disable-next-line no-bitwise
-        if (err.message && ~err.message.indexOf('validation failed')) {
+        if (err.name === 'ValidationError') {
           res.status(400).send({
             message: 'Переданы некорректные данные при обновлении профиля',
           });
         }
-        // eslint-disable-next-line no-bitwise
-        if (err.message && ~err.message.indexOf('Cast to ObjectId failed')) {
+        if (err.name === 'CastError') {
           res.status(404).send({
             message: 'Пользователь с указанным _id не найден',
           });
@@ -88,18 +82,16 @@ module.exports = {
 
     User.findByIdAndUpdate(req.user._id, {
       avatar,
-    })
+    }, opts).orFail()
       .then((user) => res.send({ user }))
       // если ответ не успешный, отправим на сервер ошибку
       .catch((err) => {
-        // eslint-disable-next-line no-bitwise
-        if (err.message && ~err.message.indexOf('validation failed')) {
+        if (err.name === 'ValidationError') {
           res.status(400).send({
             message: 'Переданы некорректные данные при обновлении аватара',
           });
         }
-        // eslint-disable-next-line no-bitwise
-        if (err.message && ~err.message.indexOf('Cast to ObjectId failed')) {
+        if (err.name === 'CastError') {
           res.status(404).send({
             message: 'Пользователь с указанным _id не найден',
           });
