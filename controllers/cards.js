@@ -1,6 +1,8 @@
 // импортируем модель
 const Card = require('../models/card');
 
+const orFailError = require('../utils/utils');
+
 module.exports = {
   findCards(req, res) {
     // ищем все карточки
@@ -36,13 +38,13 @@ module.exports = {
 
   removeCard(req, res) {
     // параметром передадим только id
-    Card.findByIdAndDelete(req.params.id).orFail()
+    Card.findByIdAndDelete(req.params.id).orFail(orFailError)
       .then((card) => res.send({ card }))
       // если ответ не успешный, отправим ошибку
       .catch((err) => {
         if (err.name === 'CastError') {
           res.status(404).send({
-            message: 'Карточка с указанным _id не найдена',
+            message: 'Карточка по указанному _id не найдена',
           });
         }
       });
@@ -53,7 +55,7 @@ module.exports = {
       req.params.id,
       { $addToSet: { likes: req.user._id } }, // добавить _id в массив, если его там нет
       { new: true },
-    ).orFail()
+    ).orFail(orFailError)
       .then((card) => res.send({ card }))
       // если ответ не успешный, отправим ошибку
       .catch((err) => {
@@ -71,7 +73,7 @@ module.exports = {
       req.params.id,
       { $pull: { likes: req.user._id } }, // убрать _id из массива
       { new: true },
-    ).orFail()
+    ).orFail(orFailError)
       .then((card) => res.send({ card }))
       // если ответ не успешный, отправим на сервер ошибку
       .catch((err) => {

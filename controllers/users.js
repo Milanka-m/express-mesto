@@ -1,6 +1,8 @@
 // импортируем модель
 const User = require('../models/user');
 
+const orFailError = require('../utils/utils');
+
 const opts = { runValidators: true, new: true };
 module.exports = {
   findUsers(req, res) {
@@ -12,7 +14,7 @@ module.exports = {
 
   findUserOne(req, res) {
     // ищем пользователя по id
-    User.findById(req.params.id).orFail()
+    User.findById(req.params.id).orFail(orFailError)
       .then((users) => res.send({ users }))
       .catch((err) => {
         if (err.name === 'CastError') {
@@ -57,7 +59,7 @@ module.exports = {
     User.findByIdAndUpdate(req.user._id, {
       name,
       about,
-    }, opts).orFail()
+    }, opts).orFail(orFailError)
       .then((user) => res.send({ user }))
       // если ответ не успешный, отправим на сервер ошибку
       .catch((err) => {
@@ -68,7 +70,7 @@ module.exports = {
         }
         if (err.name === 'CastError') {
           res.status(404).send({
-            message: 'Пользователь с указанным _id не найден',
+            message: 'Пользователь по указанному _id не найден',
           });
         }
         res.status(500).send({ message: 'На сервере произошла ошибка' });
@@ -82,7 +84,7 @@ module.exports = {
 
     User.findByIdAndUpdate(req.user._id, {
       avatar,
-    }, opts).orFail()
+    }, opts).orFail(orFailError)
       .then((user) => res.send({ user }))
       // если ответ не успешный, отправим на сервер ошибку
       .catch((err) => {
@@ -93,7 +95,7 @@ module.exports = {
         }
         if (err.name === 'CastError') {
           res.status(404).send({
-            message: 'Пользователь с указанным _id не найден',
+            message: 'Пользователь по указанному _id не найден',
           });
         }
         res.status(500).send({ message: 'На сервере произошла ошибка' });
