@@ -2,6 +2,8 @@
 const Card = require('../models/card');
 
 const orFailError = require('../utils/utils');
+const NotFoundError = require('../errors/not-found-err');
+const BadRequestError = require('../errors/bad-request-err');
 
 module.exports = {
   findCards(req, res) {
@@ -11,7 +13,7 @@ module.exports = {
       .catch((err) => res.send({ err }));
   },
 
-  createCard(req, res) {
+  createCard(req, res, next) {
     const owner = req.user._id;
     const {
       name,
@@ -24,22 +26,23 @@ module.exports = {
       owner,
     })
       // если ответ успешный, на сервер отправиться объект card
-      .then((card) => res.send({ card }))
-      // если ответ не успешный, отправим на сервер ошибку
-      .catch((err) => {
-        if (err.name === 'ValidationError') {
-          res.status(400).send({
-            message: 'Переданы некорректные данные в методы создания карточки',
-          });
+      .then((card) => {
+        if (!card) {
+          throw new BadRequestError('Переданы некорректные данные в методы создания карточки');
         }
-        res.status(500).send({ message: 'На сервере произошла ошибка' });
-      });
+        res.send({ card });
+      })
+      // если ответ не успешный, отправим на сервер ошибку
+      .catch(next);
   },
 
-  removeCard(req, res) {
+  removeCard(req, res, next) {
     // параметром передадим только id
     Card.findById(req.params.id).orFail(orFailError)
       .then((card) => {
+        if (!card) {
+          throw new NotFoundError('Карточка по указанному _id не найденa');
+        }
         // eslint-disable-next-line no-constant-condition
         if ({ owner: req.user._id }) {
           res.send({ card });
@@ -47,49 +50,39 @@ module.exports = {
         }
       })
       // если ответ не успешный, отправим ошибку
-      .catch((err) => {
-        if (err.name === 'CastError') {
-          res.status(404).send({
-            message: 'Карточка по указанному _id не найдена',
-          });
-        }
-      });
+      .catch(next);
   },
 
-  likeCard(req, res) {
+  likeCard(req, res, next) {
     Card.findByIdAndUpdate(
       req.params.id,
       { $addToSet: { likes: req.user._id } }, // добавить _id в массив, если его там нет
       { new: true },
     ).orFail(orFailError)
-      .then((card) => res.send({ card }))
-      // если ответ не успешный, отправим ошибку
-      .catch((err) => {
-        if (err.name === 'CastError') {
-          res.status(400).send({
-            message: 'Переданы некорректные данные для постановки лайка',
-          });
+      .then((card) => {
+        if (!card) {
+          throw new BadRequestError('Переданы некорректные данные для постановки лайка');
         }
-        res.status(500).send({ message: 'На сервере произошла ошибка' });
-      });
+        res.send({ card });
+      })
+      // если ответ не успешный, отправим ошибку
+      .catch(next);
   },
 
-  dislikeCard(req, res) {
+  dislikeCard(req, res, next) {
     Card.findByIdAndUpdate(
       req.params.id,
       { $pull: { likes: req.user._id } }, // убрать _id из массива
       { new: true },
     ).orFail(orFailError)
-      .then((card) => res.send({ card }))
-      // если ответ не успешный, отправим на сервер ошибку
-      .catch((err) => {
-        if (err.name === 'CastError') {
-          res.status(400).send({
-            message: 'Переданы некорректные данные для снятия лайка',
-          });
+      .then((card) => {
+        if (!card) {
+          throw new BadRequestError('Переданы некорректные данные для постановки лайка');
         }
-        res.status(500).send({ message: 'На сервере произошла ошибка' });
-      });
+        res.send({ card });
+      })
+      // если ответ не успешный, отправим ошибку
+      .catch(next);
   },
 
 };

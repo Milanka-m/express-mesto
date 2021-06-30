@@ -2,6 +2,8 @@
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const User = require('../models/user');
+const UnauthorizedError = require('../errors/unauthorized-err');
+const BadRequestError = require('../errors/bad-request-err');
 
 // функция, которая генерирует токен, принимает id пользователя и роль
 const generateAccessToken = (_id) => {
@@ -11,7 +13,7 @@ const generateAccessToken = (_id) => {
   });
 };
 
-module.exports.login = (req, res) => {
+module.exports.login = (req, res, next) => {
   // получаем поля логин и пароль из тела запроса
   const { email, password } = req.body;
 
@@ -20,17 +22,13 @@ module.exports.login = (req, res) => {
     .then((user) => {
       // если не найден такой пользователь надо вернуть ошибку
       if (!user) {
-        return res.status(400).send({
-          message: 'Такого пользователя не существует',
-        });
+        throw new UnauthorizedError('Такого пользователя не существует');
       }
       // проверяем пароль на корректность, передаем параметры (пароль и захешированный пароль)
       const isPasswordCorrect = bcrypt.compareSync(password, user.password);
       // если пароль некорректен вернем ошибку
       if (!isPasswordCorrect) {
-        return res.status(400).send({
-          message: 'Введенный логин или пароль некорректен',
-        });
+        throw new BadRequestError('Введенный логин или пароль некорректен');
       }
 
       // возвращаем jwt
@@ -38,7 +36,5 @@ module.exports.login = (req, res) => {
         token: generateAccessToken(user._id),
       });
     })
-    .catch((err) => {
-      res.status(400).send({ err });
-    });
+    .catch(next);
 };

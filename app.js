@@ -23,9 +23,6 @@ app.use(bodyParser.json());
 app.post('/signup', createUser);
 app.post('/signin', login);
 
-/* // защитим роуты авторизацией
-app.use(authMiddlevare); */
-
 // мидлвэра, которая по эндопоинту /users будет использовать роутер userRoutes
 app.use('/users', authMiddlevare, userRoutes);
 
@@ -46,10 +43,23 @@ async function start() {
   });
 }
 
-/* // централизованная обработка ошибок
+// централизованная обработка ошибок
+// eslint-disable-next-line no-unused-vars
 app.use((err, req, res, next) => {
   // если у ошибки нет статуса, выставляем 500
   const { statusCode = 500, message } = err;
+
+  if (err.name === 'CastError') {
+    res.status(404).send({ message: 'Пользователь/карточка по указанному id не найден' });
+  }
+
+  if (err.name === 'ValidationError') {
+    res.status(400).send({ message: 'Переданы некорректные данные в методы создания пользователя/карточки/аватара' });
+  }
+
+  if (err.name === 'MongoError' && err.code === 11000) {
+    res.status(409).send({ message: 'Пользователь с такие email уже существует' });
+  }
 
   res
     .status(statusCode)
@@ -59,7 +69,7 @@ app.use((err, req, res, next) => {
         ? 'На сервере произошла ошибка'
         : message,
     });
-}); */
+});
 
 // приложение будет слушаться на 3000 порту
 app.listen(PORT, () => {
