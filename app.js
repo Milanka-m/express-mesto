@@ -7,6 +7,9 @@ const bodyParser = require('body-parser');
 const userRoutes = require('./routes/users');
 // импортируем роутер cards
 const cardRoutes = require('./routes/cards');
+const { createUser } = require('./controllers/users');
+const { login } = require('./controllers/login');
+const authMiddlevare = require('./middlewares/auth');
 
 // создаем приложение методом express
 const app = express();
@@ -16,20 +19,18 @@ const { PORT = 3000 } = process.env;
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
-// мидлвэра добавляет в каждый запрос объект user
-app.use((req, res, next) => {
-  req.user = {
-    _id: '60cb5817c38f8d36dced1113',
-  };
+// роуты, не требующие авторизации
+app.post('/signup', createUser);
+app.post('/signin', login);
 
-  next();
-});
+/* // защитим роуты авторизацией
+app.use(authMiddlevare); */
 
 // мидлвэра, которая по эндопоинту /users будет использовать роутер userRoutes
-app.use('/users', userRoutes);
+app.use('/users', authMiddlevare, userRoutes);
 
 // мидлвэра, которая по эндопоинту /users будет использовать роутер cardRoutes
-app.use('/cards', cardRoutes);
+app.use('/cards', authMiddlevare, cardRoutes);
 
 // мидлвэра, которая отдает 404 ошибку при запросе несуществующего роута
 app.use((req, res) => {
@@ -44,6 +45,21 @@ async function start() {
     useCreateIndex: true,
   });
 }
+
+/* // централизованная обработка ошибок
+app.use((err, req, res, next) => {
+  // если у ошибки нет статуса, выставляем 500
+  const { statusCode = 500, message } = err;
+
+  res
+    .status(statusCode)
+    .send({
+      // проверяем статус и выставляем сообщение в зависимости от него
+      message: statusCode === 500
+        ? 'На сервере произошла ошибка'
+        : message,
+    });
+}); */
 
 // приложение будет слушаться на 3000 порту
 app.listen(PORT, () => {

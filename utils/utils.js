@@ -1,5 +1,5 @@
 const orFailError = () => {
-  const error = new Error('Карточка или пользователь по указанному _id не найден');
+  const error = new Error('Запись/данные отсутвуют в базе');
   error.statusCode = 404;
   throw error;
 };

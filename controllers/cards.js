@@ -38,8 +38,14 @@ module.exports = {
 
   removeCard(req, res) {
     // параметром передадим только id
-    Card.findByIdAndDelete(req.params.id).orFail(orFailError)
-      .then((card) => res.send({ card }))
+    Card.findById(req.params.id).orFail(orFailError)
+      .then((card) => {
+        // eslint-disable-next-line no-constant-condition
+        if ({ owner: req.user._id }) {
+          res.send({ card });
+          Card.deleteOne(card, (err) => err);
+        }
+      })
       // если ответ не успешный, отправим ошибку
       .catch((err) => {
         if (err.name === 'CastError') {

@@ -4,7 +4,6 @@ const router = require('express').Router();
 const {
   findUsers,
   findUserOne,
-  createUser,
   updateUserProfile,
   updateUserAvatar,
 } = require('../controllers/users');
@@ -14,9 +13,6 @@ router.get('/', findUsers);
 
 // роутер чтения (получения) информации по id
 router.get('/:id', findUserOne);
-
-// роутер записи (создания объекта)
-router.post('/', createUser);
 
 // роутер обновления данных профиля
 router.patch('/me', updateUserProfile);
