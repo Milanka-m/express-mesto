@@ -13,7 +13,7 @@
     "type": "git",
     "url": "git+https://github.com/Milanka-m/express-mesto.git"
   },
-  "author": "",
+  "author": "Milana Birulia",
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/Milanka-m/express-mesto/issues"
@@ -28,6 +28,7 @@
   "dependencies": {
     "bcrypt": "^5.0.1",
     "body-parser": "^1.19.0",
+    "celebrate": "^14.0.0",
     "express": "^4.17.1",
     "jsonwebtoken": "^8.5.1",
     "mongoose": "^5.12.14",

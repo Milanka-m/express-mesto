@@ -1,9 +1,9 @@
 // импортируем модель
 const Card = require('../models/card');
 
-const orFailError = require('../utils/utils');
 const NotFoundError = require('../errors/not-found-err');
 const BadRequestError = require('../errors/bad-request-err');
+const ForbiddenError = require('../errors/forbidden-err');
 
 module.exports = {
   findCards(req, res) {
@@ -38,18 +38,21 @@ module.exports = {
 
   removeCard(req, res, next) {
     // параметром передадим только id
-    Card.findById(req.params.id).orFail(orFailError)
+    Card.findById(req.params.id)
       .then((card) => {
         if (!card) {
           throw new NotFoundError('Карточка по указанному _id не найденa');
         }
-        // eslint-disable-next-line no-constant-condition
-        if ({ owner: req.user._id }) {
-          res.send({ card });
-          Card.deleteOne(card, (err) => err);
+        if (String(card.owner) !== req.user._id) {
+          throw new ForbiddenError('Недостаточно прав для удаления карточки');
         }
+        Card.deleteOne({ _id: card._id })
+          .then(() => {
+            res.send({ card });
+          })
+          .catch(next);
       })
-      // если ответ не успешный, отправим ошибку
+
       .catch(next);
   },
 
@@ -58,14 +61,20 @@ module.exports = {
       req.params.id,
       { $addToSet: { likes: req.user._id } }, // добавить _id в массив, если его там нет
       { new: true },
-    ).orFail(orFailError)
+    )
       .then((card) => {
         if (!card) {
-          throw new BadRequestError('Переданы некорректные данные для постановки лайка');
+          throw new NotFoundError('Карточка с указанным _id не найдена');
         }
         res.send({ card });
       })
       // если ответ не успешный, отправим ошибку
+      .catch((err) => {
+        if (err.name === 'CastError') {
+          throw new BadRequestError('Переданы некорректные данные для постановки лайка');
+        }
+        next(err);
+      })
       .catch(next);
   },
 
@@ -74,14 +83,20 @@ module.exports = {
       req.params.id,
       { $pull: { likes: req.user._id } }, // убрать _id из массива
       { new: true },
-    ).orFail(orFailError)
+    )
       .then((card) => {
         if (!card) {
-          throw new BadRequestError('Переданы некорректные данные для постановки лайка');
+          throw new NotFoundError('Карточка с указанным _id не найдена');
         }
         res.send({ card });
       })
       // если ответ не успешный, отправим ошибку
+      .catch((err) => {
+        if (err.name === 'CastError') {
+          throw new BadRequestError('Переданы некорректные данные для снятия лайка');
+        }
+        next(err);
+      })
       .catch(next);
   },
 

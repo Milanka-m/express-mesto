@@ -3,6 +3,7 @@ const express = require('express');
 // подключаем mongoose
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
+const { celebrate, Joi, errors } = require('celebrate');
 // импортируем роутер users
 const userRoutes = require('./routes/users');
 // импортируем роутер cards
@@ -10,6 +11,7 @@ const cardRoutes = require('./routes/cards');
 const { createUser } = require('./controllers/users');
 const { login } = require('./controllers/login');
 const authMiddlevare = require('./middlewares/auth');
+const NotFoundError = require('./errors/not-found-err');
 
 // создаем приложение методом express
 const app = express();
@@ -18,21 +20,6 @@ const { PORT = 3000 } = process.env;
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
-
-// роуты, не требующие авторизации
-app.post('/signup', createUser);
-app.post('/signin', login);
-
-// мидлвэра, которая по эндопоинту /users будет использовать роутер userRoutes
-app.use('/users', authMiddlevare, userRoutes);
-
-// мидлвэра, которая по эндопоинту /users будет использовать роутер cardRoutes
-app.use('/cards', authMiddlevare, cardRoutes);
-
-// мидлвэра, которая отдает 404 ошибку при запросе несуществующего роута
-app.use((req, res) => {
-  res.status(404).send({ message: 'Страница на которую вы попапли, не существует' });
-});
 
 async function start() {
   await mongoose.connect('mongodb://localhost:27017/mestodb', {
@@ -43,32 +30,43 @@ async function start() {
   });
 }
 
+// роуты, не требующие авторизации
+app.post('/signup', celebrate({
+  body: Joi.object().keys({
+    name: Joi.string().min(2).max(30),
+    about: Joi.string().min(2).max(30),
+    avatar: Joi.string(),
+    email: Joi.string().required().email(),
+    password: Joi.string().required().min(8),
+  }),
+}), createUser);
+app.post('/signin', celebrate({
+  body: Joi.object().keys({
+    email: Joi.string().required().email(),
+    password: Joi.string().required().min(8),
+  }),
+}), login);
+
+// мидлвэра, которая по эндопоинту /users будет использовать роутер userRoutes
+app.use('/users', authMiddlevare, userRoutes);
+
+// мидлвэра, которая по эндопоинту /users будет использовать роутер cardRoutes
+app.use('/cards', authMiddlevare, cardRoutes);
+
+// мидлвэра, которая отдает 404 ошибку при запросе несуществующего роута
+app.use((req, res, next) => {
+  next(new NotFoundError('Страница на которую вы попапли, не существует'));
+});
+
+// обработчики ошибок
+app.use(errors()); // обработчик ошибок celebrate
+
 // централизованная обработка ошибок
-// eslint-disable-next-line no-unused-vars
 app.use((err, req, res, next) => {
-  // если у ошибки нет статуса, выставляем 500
-  const { statusCode = 500, message } = err;
-
-  if (err.name === 'CastError') {
-    res.status(404).send({ message: 'Пользователь/карточка по указанному id не найден' });
-  }
-
-  if (err.name === 'ValidationError') {
-    res.status(400).send({ message: 'Переданы некорректные данные в методы создания пользователя/карточки/аватара' });
-  }
-
-  if (err.name === 'MongoError' && err.code === 11000) {
-    res.status(409).send({ message: 'Пользователь с такие email уже существует' });
-  }
-
-  res
-    .status(statusCode)
-    .send({
-      // проверяем статус и выставляем сообщение в зависимости от него
-      message: statusCode === 500
-        ? 'На сервере произошла ошибка'
-        : message,
-    });
+  const status = err.statusCode || 500;
+  const { message } = err;
+  res.status(status).json({ err: message || 'Произошла ошибка на сервере' });
+  return next();
 });
 
 // приложение будет слушаться на 3000 порту

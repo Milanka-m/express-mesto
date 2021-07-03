@@ -2,8 +2,6 @@ const bcrypt = require('bcrypt');
 // импортируем модель
 const User = require('../models/user');
 
-const orFailError = require('../utils/utils');
-
 const opts = { runValidators: true, new: true };
 const NotFoundError = require('../errors/not-found-err');
 const BadRequestError = require('../errors/bad-request-err');
@@ -19,7 +17,7 @@ module.exports = {
 
   findUserOne(req, res, next) {
     // ищем пользователя по id
-    User.findById(req.params.id).orFail(orFailError)
+    User.findById(req.params.id)
       .then((user) => {
         if (!user) {
           // если такого пользователя нет,
@@ -47,7 +45,7 @@ module.exports = {
       const candidate = await User.findOne({ email });
       // если есть такой кандидат надо вернуть ошибку
       if (candidate) {
-        throw new ConflictError('Пользователь с таким email уже существует');
+        throw new ConflictError('Пользователь с таким email уже существует на сервере');
       }
 
       // хешируем пароль
@@ -62,18 +60,23 @@ module.exports = {
         avatar,
       });
 
-      if (!user) {
-        throw new BadRequestError('Переданы некорректные данные в методы создания пользователя');
-      }
       // дождемся пока юзер сохраниться
       await user.save();
 
       // если ответ успешный, на сервер отправиться объект user
       return res.send({
         message: 'Пользователь был успешно создан',
-        user,
+        user: {
+          email: user.email,
+          name: user.name,
+          about: user.about,
+          avatar: user.avatar,
+        },
       });
     } catch (err) {
+      if (err.name === 'ValidationError') {
+        throw new BadRequestError('Переданы некорректные данные в методы создания пользователя');
+      }
       next(err);
     }
   },
@@ -86,14 +89,16 @@ module.exports = {
     User.findByIdAndUpdate(req.user._id, {
       name,
       about,
-    }, opts).orFail(orFailError)
+    }, opts)
       .then((user) => {
-        if (!user) {
-          throw new BadRequestError('Переданы некорректные данные в методы создания пользователя');
-        }
         res.send({ user });
       })
       // если ответ не успешный, отправим на сервер ошибку
+      .catch((err) => {
+        if (err.name === 'ValidationError') {
+          throw new BadRequestError('Переданы некорректные данные в методы создания пользователя');
+        }
+      })
       .catch(next);
   },
 
@@ -104,14 +109,16 @@ module.exports = {
 
     User.findByIdAndUpdate(req.user._id, {
       avatar,
-    }, opts).orFail(orFailError)
+    }, opts)
       .then((user) => {
-        if (!user) {
-          throw new BadRequestError('Переданы некорректные данные при обновлении аватара');
-        }
         res.send({ user });
       })
       // если ответ не успешный, отправим на сервер ошибку
+      .catch((err) => {
+        if (err.name === 'ValidationError') {
+          throw new BadRequestError('Переданы некорректные данные при обновлении аватара');
+        }
+      })
       .catch(next);
   },
 
