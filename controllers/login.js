@@ -3,7 +3,6 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const User = require('../models/user');
 const UnauthorizedError = require('../errors/unauthorized-err');
-const BadRequestError = require('../errors/bad-request-err');
 
 // функция, которая генерирует токен, принимает id пользователя и роль
 const generateAccessToken = (_id) => {
@@ -28,7 +27,7 @@ module.exports.login = (req, res, next) => {
       const isPasswordCorrect = bcrypt.compareSync(password, user.password);
       // если пароль некорректен вернем ошибку
       if (!isPasswordCorrect) {
-        throw new BadRequestError('Введенный логин или пароль некорректен');
+        throw new UnauthorizedError('Введенный логин или пароль некорректен');
       }
 
       // возвращаем jwt

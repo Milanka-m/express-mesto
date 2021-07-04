@@ -35,7 +35,7 @@ app.post('/signup', celebrate({
   body: Joi.object().keys({
     name: Joi.string().min(2).max(30),
     about: Joi.string().min(2).max(30),
-    avatar: Joi.string(),
+    avatar: Joi.string().pattern(/^(ftp|http|https):\/\/[^ "]+$/),
     email: Joi.string().required().email(),
     password: Joi.string().required().min(8),
   }),
@@ -65,7 +65,7 @@ app.use(errors()); // обработчик ошибок celebrate
 app.use((err, req, res, next) => {
   const status = err.statusCode || 500;
   const { message } = err;
-  res.status(status).json({ err: message || 'Произошла ошибка на сервере' });
+  res.status(status).json({ message: message || 'Произошла ошибка на сервере' });
   return next();
 });
 
