@@ -12,6 +12,7 @@ const { createUser } = require('./controllers/users');
 const { login } = require('./controllers/login');
 const authMiddlevare = require('./middlewares/auth');
 const NotFoundError = require('./errors/not-found-err');
+const { requestLogger, errorLogger } = require('./middlewares/Logger');
 
 // создаем приложение методом express
 const app = express();
@@ -29,6 +30,8 @@ async function start() {
     useCreateIndex: true,
   });
 }
+
+app.use(requestLogger); // подключаем логгер запросов
 
 // роуты, не требующие авторизации
 app.post('/signup', celebrate({
@@ -59,6 +62,8 @@ app.use('/cards', authMiddlevare, cardRoutes);
 app.use((req, res, next) => {
   next(new NotFoundError('Страница на которую вы попапли, не существует'));
 });
+
+app.use(errorLogger); // подключаем логгер ошибок
 
 // обработчики ошибок
 app.use(errors()); // обработчик ошибок celebrate
