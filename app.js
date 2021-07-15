@@ -11,6 +11,7 @@ const cardRoutes = require('./routes/cards');
 const { createUser } = require('./controllers/users');
 const { login } = require('./controllers/login');
 const authMiddlevare = require('./middlewares/auth');
+const corsMiddlevare = require('./middlewares/cors');
 const NotFoundError = require('./errors/not-found-err');
 const { requestLogger, errorLogger } = require('./middlewares/Logger');
 
@@ -32,6 +33,7 @@ async function start() {
 }
 
 app.use(requestLogger); // подключаем логгер запросов
+app.use(corsMiddlevare);
 
 // роуты, не требующие авторизации
 app.post('/signup', celebrate({
