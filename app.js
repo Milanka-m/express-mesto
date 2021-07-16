@@ -1,3 +1,4 @@
+require('dotenv').config();
 // подключаем express
 const express = require('express');
 // подключаем mongoose

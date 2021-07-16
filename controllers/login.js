@@ -1,15 +1,18 @@
+require('dotenv').config();
 // импортируем модель
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const User = require('../models/user');
 const UnauthorizedError = require('../errors/unauthorized-err');
 
+const { NODE_ENV, JWT_SECRET } = process.env;
 // функция, которая генерирует токен, принимает id пользователя и роль
 const generateAccessToken = (_id) => {
   const payload = { _id };
-  return jwt.sign(payload, 'secret', {
-    expiresIn: '7d',
-  });
+  return jwt.sign(payload,
+    NODE_ENV === 'production' ? JWT_SECRET : 'secret', {
+      expiresIn: '7d',
+    });
 };
 
 module.exports.login = (req, res, next) => {
