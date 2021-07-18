@@ -4,11 +4,11 @@ const bcrypt = require('bcrypt');
 const User = require('../models/user');
 const UnauthorizedError = require('../errors/unauthorized-err');
 
-const { JWT_SECRET } = process.env;
+const { NODE_ENV, JWT_SECRET } = process.env;
 // функция, которая генерирует токен, принимает id пользователя
 const generateAccessToken = (_id) => {
   const payload = { _id };
-  return jwt.sign(payload, JWT_SECRET, {
+  return jwt.sign(payload, NODE_ENV === 'production' ? JWT_SECRET : 'dev-secret', {
     expiresIn: '7d',
   });
 };
