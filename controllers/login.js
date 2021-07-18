@@ -9,7 +9,7 @@ const { NODE_ENV, JWT_SECRET } = process.env;
 const generateAccessToken = (_id) => {
   const payload = { _id };
   return jwt.sign(payload, NODE_ENV === 'production' ? JWT_SECRET : 'dev-secret', {
-    expiresIn: '7d',
+    expiresIn: '1m',
   });
 };
 
