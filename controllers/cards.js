@@ -9,7 +9,7 @@ module.exports = {
   findCards(req, res) {
     // ищем все карточки
     Card.find({})
-      .then((cards) => res.send([cards]))
+      .then((cards) => res.send(cards))
       .catch((err) => res.send({ err }));
   },
 
@@ -30,7 +30,7 @@ module.exports = {
         if (!card) {
           throw new BadRequestError('Переданы некорректные данные в методы создания карточки');
         }
-        res.send([card]);
+        res.send({ card });
       })
       // если ответ не успешный, отправим на сервер ошибку
       .catch(next);
