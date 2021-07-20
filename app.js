@@ -58,7 +58,7 @@ app.post('/signin', celebrate({
 // мидлвэра, которая по эндопоинту /users будет использовать роутер userRoutes
 app.use('/users', authMiddlevare, userRoutes);
 
-// мидлвэра, которая по эндопоинту /users будет использовать роутер cardRoutes
+// мидлвэра, которая по эндопоинту /cards будет использовать роутер cardRoutes
 app.use('/cards', authMiddlevare, cardRoutes);
 
 // мидлвэра, которая отдает 404 ошибку при запросе несуществующего роута

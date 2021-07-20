@@ -78,6 +78,7 @@ module.exports = {
       return res.send({
         message: 'Пользователь был успешно создан',
         user: {
+          _id: user._id,
           email: user.email,
           name: user.name,
           about: user.about,
