@@ -36,7 +36,7 @@ module.exports = {
           throw new NotFoundError('Пользователь по указанному _id не найден');
         }
 
-        res.send({ user });
+        res.send(user);
       })
       .catch(next);
   },
