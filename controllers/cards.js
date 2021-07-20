@@ -9,7 +9,7 @@ module.exports = {
   findCards(req, res) {
     // ищем все карточки
     Card.find({})
-      .then((cards) => res.send([cards]))
+      .then((cards) => res.send({ cards }))
       .catch((err) => res.send({ err }));
   },
 
