@@ -66,7 +66,7 @@ module.exports = {
         if (!card) {
           throw new NotFoundError('Карточка с указанным _id не найдена');
         }
-        res.send({ card });
+        res.send(card);
       })
       // если ответ не успешный, отправим ошибку
       .catch((err) => {
@@ -88,7 +88,7 @@ module.exports = {
         if (!card) {
           throw new NotFoundError('Карточка с указанным _id не найдена');
         }
-        res.send({ card });
+        res.send(card);
       })
       // если ответ не успешный, отправим ошибку
       .catch((err) => {
