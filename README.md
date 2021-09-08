@@ -2,9 +2,9 @@
 
 --------
 ### Стек:
-* Java Script;
-* Node.js;
-* Express.js;
+* Java Script
+* Node.js
+* Express.js
 * MongoDB
 -------
 
